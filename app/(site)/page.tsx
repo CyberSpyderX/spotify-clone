@@ -1,6 +1,26 @@
+import getSongs from "@/actions/getSongs";
 import Header from "@/components/Header";
 import ListItem from "@/components/ListItem";
-export default function Home() {
+import PageContent from "@/components/PageContent";
+
+export const revalidate = 0;
+
+export default async function Home() {
+  const tdl = require('tdl');
+
+  console.log(111111111111111);
+  const { getTdjson } = require('prebuilt-tdlib')
+  tdl.configure({ tdjson: getTdjson() })
+
+  console.log(222222222222222);
+
+    const client = tdl.createClient({
+        apiId: 29541512,
+        apiHash: '0f045b2e98c2da89d4fd3d5f8ef472e8',
+    });
+    
+    const songs = await getSongs();
+
   return (
     <div className="
       bg-neutral-900
@@ -28,10 +48,20 @@ export default function Home() {
             gap-3
             mt-4
           ">
-            <ListItem />
+            <ListItem 
+              image="/images/liked.png"
+              name="Liked Songs"
+              href="/liked"
+            />
           </div>
         </div>
       </Header>
+      <div className="mt-2 mb-7 px-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-white text-2xl font-semibold">New Arrivals</h1>
+        </div>
+        <PageContent songs={songs} />
+      </div>
     </div>
   );
 }
