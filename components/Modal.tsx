@@ -36,6 +36,7 @@ const Modal: React.FC<ModalProps> = ({
                 <Dialog.Content
                     className="
                         fixed
+                        overflow-y-auto
                         bg-neutral-800
                         drop-shadow-700
                         border

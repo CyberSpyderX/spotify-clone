@@ -9,7 +9,8 @@ const withBundleAnalyzer = Analyser({
 const nextConfig = {
     images: {
         domains: [
-            "gjxpeuintxbmqwrgvhge.supabase.co"
+            "gjxpeuintxbmqwrgvhge.supabase.co",
+            "i.scdn.co",
         ]
     },
     webpack: (config, { isServer }) => {

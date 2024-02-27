@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { HiHome } from "react-icons/hi";
 import { BiSearch } from "react-icons/bi";
 
@@ -12,6 +12,8 @@ import Library from "./Library";
 import { Song } from "@/types";
 import usePlayer from "@/hooks/usePlayer";
 import { twMerge } from "tailwind-merge";
+import { useSessionContext } from "@supabase/auth-helpers-react";
+import { RealtimeChannel } from "@supabase/supabase-js";
 
 interface SidebarProps {
     children: React.ReactNode;
@@ -22,8 +24,16 @@ const Sidebar: React.FC<SidebarProps> = ({
     children,
     songs
 }) => {
-    const pathname = usePathname();
+    const {supabaseClient: supabase, session} = useSessionContext();
+    const [email, setEmail] = useState('')
+
+    let playbackChannel = useRef<RealtimeChannel>();
+    let pbChannelUser = useRef<RealtimeChannel>();
+    let pbChannelPlayerCfg = useRef<RealtimeChannel>();
+
     const player = usePlayer();
+    
+    const pathname = usePathname();
 
     const routes = useMemo(() => [
         {
@@ -41,8 +51,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     ], [pathname]);
 
     return (
-        <div className={twMerge(`flex h-full p-2 gap-2`,
-            player.activeId && "h-[calc(100%-80px)]"
+        <div className={twMerge(`flex h-full p-2 gap-2 pb-0`,
+            player.activeId && "h-[calc(100%-112px)]"
         )}>
             <div className="
                 hidden

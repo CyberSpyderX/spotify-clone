@@ -4,30 +4,26 @@ import * as RadixSlider from "@radix-ui/react-slider";
 
 interface SliderProps {
     value?: number;
-    onChange ?: (value: number) => void;
+    onChange ?: (value: number, commit?: boolean) => void;
 }
 
-const Slider: React.FC<SliderProps> = ({ value = 1, onChange }) => {
-
-    const handleChange = (newValue: number[]) => {
-        onChange?.(newValue[0]);
-    }
+const Slider: React.FC<SliderProps> = ({ value = 1,onChange }) => {
 
     return (
         <RadixSlider.Root className="
             relative
             flex
             items-center
-            select-none
-            touch-none
             w-full
-            h-10
+            py-1
+            group
         "
-        defaultValue={[1]}
+        defaultValue={[0.5]}
         value={[value]}
-        onValueChange={handleChange}
+        onValueChange={(val) => onChange?.(val[0])}
+        onValueCommit={(val) => onChange?.(val[0], true)}
         max={1}
-        step={0.1}
+        step={0.01}
         aria-label="Volume"
         >
             <RadixSlider.Track className="
@@ -35,18 +31,26 @@ const Slider: React.FC<SliderProps> = ({ value = 1, onChange }) => {
                 relative
                 grow
                 rounded-full
-                h-[3px]
+                h-[4px]
             ">
                 <RadixSlider.Range className="
                     absolute
                     bg-white
+                    group-hover:bg-customGreen
                     h-full
                     rounded-full
                 ">
-                    
                 </RadixSlider.Range>
             </RadixSlider.Track>
-
+            <RadixSlider.Thumb className="
+                h-[10px] 
+                w-[10px]
+                hidden
+                cursor-pointer
+                group-hover:block 
+                bg-white
+                rounded-full
+            " aria-label="Volume" />
         </RadixSlider.Root>
     );
 }

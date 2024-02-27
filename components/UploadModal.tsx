@@ -2,7 +2,7 @@
 
 import { FieldValue, FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import uniqid from "uniqid";
 
@@ -14,11 +14,15 @@ import Input from "./Input";
 import Button from "./Button";
 import { useRouter } from "next/navigation";
 import { twMerge } from "tailwind-merge";
+import axios from "axios";
+import MediaItem from "./MediaItem";
+import Image from "next/image";
 
 
 const UploadModal = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [uploadType, setUploadType] = useState(0);
+    const [onlineSearchResults, setOnlineSearchResults] = useState([]);
     const supabaseClient = useSupabaseClient();
     const { user } = useUser();
     const uploadModal = useUploadModal();
@@ -39,12 +43,18 @@ const UploadModal = () => {
             uploadModal.onClose();
         }
     }
+    
+    useEffect(() => {
+            
+    }, [onlineSearchResults]);
 
     const onSubmit: SubmitHandler<FieldValues> = async (values) => {
 
         if(!uploadType) {
             const title = values.title;
-            console.log(title);
+            
+            await axios.get('http://localhost:3000/api/getSpotifyTracks?track='+title)
+                .then(resp => {setOnlineSearchResults(resp.data.tracks)});
             
         } else {
 
@@ -161,7 +171,8 @@ const UploadModal = () => {
                 </div>                
             </div>
             {
-                    uploadType ? <form onSubmit={handleSubmit(onSubmit)}
+                uploadType ?
+                <form onSubmit={handleSubmit(onSubmit)}
                     className="flex flex-col gap-y-4"    
                 >
                     <Input
@@ -213,6 +224,44 @@ const UploadModal = () => {
                         placeholder="Enter song title"
                         {...register('title', { required: true })}
                     />
+                    {
+                        onlineSearchResults.length ? 
+                            onlineSearchResults.map((item, index) => (
+                                <div
+                                key={item.imageUrl} 
+                                className="flex
+                                items-center
+                                gap-x-3
+                                p-2
+                                hover:bg-neutral-900/50
+                                rounded-md
+                                cursor-pointer">
+                                    <div className="
+                                    relative
+                                    rounded-md
+                                    min-h-[48px]
+                                    min-w-[48px]
+                                    overflow-hidden
+                                    ">
+                                        <Image 
+                                            src={item.imageUrl || "/images/liked.png"}
+                                            fill
+                                            alt="Song Cover"
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col overflow-hidden">
+                                    <p className="text-white truncate">
+                                        {item.title}
+                                    </p>
+                                    <p className="text-sm truncate text-neutral-400">
+                                        {item.artists}
+                                    </p>
+                                </div>
+                                </div>
+                            ))
+                        : null
+                    }
                     <Button type="submit">Search</Button>
                 </form>
                 }

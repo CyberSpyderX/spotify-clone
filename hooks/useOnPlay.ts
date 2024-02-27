@@ -13,8 +13,6 @@ const useOnPlay = (songs: Song[]) => {
         if(!user) {
             return authModal.onOpen();
         }
-
-        console.log(id, songs);
         
         player.setActiveId(id);
         player.setIds(songs.map(s => s.id));
