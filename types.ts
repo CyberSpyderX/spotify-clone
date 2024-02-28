@@ -11,12 +11,12 @@ export interface UserDetails {
 }
 
 export interface Song {
-    id?: string;
+    id: string;
     title: string;
     artists: string;
-    song_path?: string;
+    song_path: string;
     cover_path: string;
-    user_id?: string;
+    user_id: string;
 }
 
 export interface Product {

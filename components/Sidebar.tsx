@@ -52,7 +52,8 @@ const Sidebar: React.FC<SidebarProps> = ({
 
     return (
         <div className={twMerge(`flex h-full p-2 gap-2 pb-0`,
-            player.activeId && "h-[calc(100%-112px)]"
+            `h-[calc(100%-${player.activeId ? (player.deviceId !== player.activeDeviceId ? 112 : 80) : 0} px)]`
+            
         )}>
             <div className="
                 hidden

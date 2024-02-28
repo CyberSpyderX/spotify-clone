@@ -1,4 +1,6 @@
-import usePlaybackUsers from "@/hooks/usePlaybackUsers";
+import usePlaybackUsers, { PlaybackUser } from "@/hooks/usePlaybackUsers";
+import { PlayerStore } from "@/hooks/usePlayer";
+import { RealtimeChannel } from "@supabase/supabase-js";
 import { useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -6,7 +8,7 @@ interface IconContainerProps {
     children?: React.ReactNode;
     iconSvgPath?: string[];
     style?: string;
-    onClick?: () => void;
+    onClick?: (id?: string) => void;
     refs?: (x: React.ReactNode) => void
 }
 interface VolumeIconProps
@@ -16,7 +18,10 @@ interface VolumeIconProps
 
 interface ConnectToADeviceIconProps 
     extends IconContainerProps {
-        type: 'iPad' | 'iPhone' | 'Web';
+        type: 'iPad' | 'iPhone' | 'Web' | '';
+        users: PlaybackUser[];
+        channel: RealtimeChannel;
+        player: PlayerStore;
 }
 
 interface ShuffleIconProps
@@ -145,7 +150,7 @@ export const VolumeIcon: React.FC<VolumeIconProps> = ({ volume, onClick }) => {
     );
 }
 
-export const ConnectToADeviceIcon: React.FC<ConnectToADeviceIconProps> = ({ onClick, refs, type, users }) => {
+export const ConnectToADeviceIcon: React.FC<ConnectToADeviceIconProps> = ({ onClick, refs, type, users, channel, player, songElapsedTime }) => {
     let style = "cursor-pointer fill-[#1db954]"; 
     
     let iconSvgPath = [];
@@ -164,6 +169,15 @@ export const ConnectToADeviceIcon: React.FC<ConnectToADeviceIconProps> = ({ onCl
         style = 'fill-neutral-400 hover:fill-white transition';
     }
 
+    function handleClick(id: string) {
+        channel.send({
+            type: 'broadcast',
+            event: 'set_player_config',
+            payload: { activeDeviceId: id, originatedBy: player.deviceId, playbackTime: songElapsedTime }
+        });
+        player.setActiveDeviceId(id);
+    }
+
     return (
         <IconContainer
             style={style}
@@ -171,9 +185,9 @@ export const ConnectToADeviceIcon: React.FC<ConnectToADeviceIconProps> = ({ onCl
             onClick={onClick}
             refs={refs}
         >
-            <div className="border-solid border-b-[#1ed760] border-b-8 border-x-transparent border-x-8 border-t-0 absolute bottom-[32px]"></div>
+            { type !== '' && <div className="border-solid border-b-[#1ed760] border-b-8 border-x-transparent border-x-8 border-t-0 absolute bottom-[32px]"></div>}
             
-            <div className="w-[320px] p-3 bg-black absolute bottom-[122px] rounded-lg bg-neutral-900/80 backdrop-blur-sm">
+            <div className="w-[320px] cursor-auto p-3 bg-black absolute bottom-[122px] rounded-lg bg-neutral-900/80 backdrop-blur-sm">
                 <div className="w-full h-[50px] bg-neutral-800/80 p-2">
                     Current device
                     <hr></hr>
@@ -181,7 +195,7 @@ export const ConnectToADeviceIcon: React.FC<ConnectToADeviceIconProps> = ({ onCl
                 </div>
                 <div className="w-full p-2 flex flex-col rounded-md">
                     {
-                        users.map(user => <div>{user.device_type}</div>)   
+                        users.map(user => <div key={user.id} className="cursor-pointer" onClick={() => handleClick(user.id)}>{user.device_type}</div>)   
                     }
                 </div>
             </div>

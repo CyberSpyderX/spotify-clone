@@ -1,3 +1,5 @@
+import { BroadcastPlayerStore, PlayerStore } from "@/hooks/usePlayer";
+
 export const getSecondsToMins: (value: number) => string = (value) => {
     return `${Math.trunc(value/60)}:${(value%60).toString().padStart(2, '0')}`;
 }
@@ -33,4 +35,18 @@ export const getDeviceType: (userAgent: string, platform?: string, isBrave?: boo
 
 
     return deviceType;
+}
+
+export const getBroadcastPlayer = (player: PlayerStore): BroadcastPlayerStore => {
+    return {
+        ids: player.ids,
+        activeId: player.activeId,
+        playing: player.playing,
+        volume: player.volume,
+        shuffle: player.shuffle,
+        repeat: player.repeat,
+        muted: player.muted,
+        activeDeviceId: player.activeDeviceId,
+        playbackTime: player.playbackTime,
+    }
 }

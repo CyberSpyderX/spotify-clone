@@ -2,7 +2,7 @@
 
 import useGetSongById from "@/hooks/useGetSongById";
 import useLoadSongUrl from "@/hooks/useLoadSongUrl";
-import usePlayer from "@/hooks/usePlayer";
+import usePlayer, { BroadcastPlayerStore } from "@/hooks/usePlayer";
 import PlayerContent from "./PlayerContent";
 import { useEffect, useRef } from "react";
 import { RealtimeChannel } from "@supabase/supabase-js";
@@ -17,6 +17,10 @@ const Player = () => {
     const { song } = useGetSongById(player.activeId);
     const songUrl = useLoadSongUrl(song!);
     const { supabaseClient, session } = useSessionContext();
+    const channelRef = useRef<RealtimeChannel | null>(null);
+    function sendPlayerToNewUser() {
+        console.log('sendPlayerToNewUser.... player: ', player);
+    }
 
     useEffect(() => {
         let subscription: RealtimeChannel, channel: RealtimeChannel, my_curr_user: PlaybackUser;
@@ -28,7 +32,7 @@ const Player = () => {
                 
                 console.log('Connected to channel!');
                 const id = uniqid();
-                
+                player.setDeviceId(id);
                 const device_type = getDeviceType(navigator.userAgent, navigator.platform, !!(navigator?.brave));
                 const myUser = { id, ...device_type };
                 my_curr_user = myUser;
@@ -40,23 +44,26 @@ const Player = () => {
                     type: 'broadcast',
                     event: 'new_user',
                     payload: { user: myUser },
-                }).then((response) => {console.log('new_user message: ', response)});
+                }).then((response) => {console.log('new_user message: ' +  JSON.stringify(response) + ' - ' +  player.activeDeviceId)});
 
                 channel.on("broadcast", { event: 'new_user'},
                 (data) => { 
                     console.log("New user logged in....", data.payload.user);
-                    playbackUsers.addUser(data.payload.user)
+                    playbackUsers.addUser(data.payload.user);
+                    player.setAskForPlayer(true);
                     channel.send({
                         type: 'broadcast',
                         event: 'existing_user',
                         payload: { user: myUser }
-                    }) 
+                    });
                 });
                 console.log('New user handler attached');
                 
                 channel.on("broadcast", { event: 'existing_user' },
                     (data) => { 
                         console.log('Existing user message from... ', data.payload.user);
+                        console.log('Current player: ', player);
+                        
                         playbackUsers.addUser(data.payload.user);
                     });
                 console.log('Existing user handler attached');
@@ -69,10 +76,13 @@ const Player = () => {
 
                 channel.on("broadcast", { event: 'set_player_config' },
                     (data) => {
-                        console.log('Receving player config... ', data.payload);
-                        player.setNewState(data.payload);
+                        if(data.payload.originatedBy !== myUser.id) {
+                            console.log('Receving player config... ', data.payload);
+                            player.setNewState(data.payload);
+                        }
                     });
-            })
+            });
+            channelRef.current = channel;
         }
 
         return () => {
@@ -86,6 +96,7 @@ const Player = () => {
                 subscription?.unsubscribe();
             }
             playbackUsers.reset();
+            player.reset();
             
         }
     }, [session?.user.email]);
@@ -93,9 +104,7 @@ const Player = () => {
     useEffect(() => {
         if(player.activeId) {
             console.log('Player changed...', player);
-            
         }
-        
     }, [player]);
 
     if(!song || !songUrl || !player.activeId) return null;
@@ -106,7 +115,6 @@ const Player = () => {
             bottom-0
             bg-black
             w-full
-            h-[112px]
             px-4
             pb-2
         ">
@@ -114,6 +122,7 @@ const Player = () => {
                 key={songUrl}
                 songData={song}
                 songUrl={songUrl}
+                channel={channelRef.current}
             />
         </div>
     );
