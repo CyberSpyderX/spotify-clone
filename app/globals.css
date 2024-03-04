@@ -9,3 +9,28 @@ body,
   background-color: black;
   color-scheme: dark;
 }
+
+.connectToDevicesDiv {
+  background: radial-gradient(circle at center -110px,green 0.5%, transparent 75%);
+  background-color: rgb(38,38,38,.5);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+/* Track */
+::-webkit-scrollbar-track {
+  background: transparent
+  ;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background-color: #444;
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

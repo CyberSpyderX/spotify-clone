@@ -6,20 +6,7 @@ import PageContent from "@/components/PageContent";
 export const revalidate = 0;
 
 export default async function Home() {
-  // const tdl = require('tdl');
-
-  // console.log(111111111111111);
-  // const { getTdjson } = require('prebuilt-tdlib')
-  // tdl.configure({ tdjson: getTdjson() })
-
-  // console.log(222222222222222);
-
-  //   const client = tdl.createClient({
-  //       apiId: 29541512,
-  //       apiHash: '0f045b2e98c2da89d4fd3d5f8ef472e8',
-  //   });
-    
-    const songs = await getSongs();
+  const songs = await getSongs();
 
   return (
     <div className="

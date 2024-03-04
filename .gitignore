@@ -3,6 +3,8 @@
 password.txt
 extra_data
 td
+_td_files
+_td_database
 
 # dependencies
 /node_modules

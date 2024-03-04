@@ -9,7 +9,7 @@ export interface PlayerStore {
     repeat: 'off' | 'all' | 'one';
     muted: boolean;
     deviceId: string;
-    activeDeviceId: string;
+    activeDeviceIds: string[];
     playbackTime: number;
     isActiveUser: boolean;
     askForPlayer: boolean;
@@ -24,7 +24,9 @@ export interface PlayerStore {
     setActiveId: (id: string) => void;
     setIds: (ids: string[]) => void;
     setNewState: (newState: Partial<PlayerStore>) => void;
-    setActiveDeviceId: (id: string) => void;
+    addActiveDevice: (id: string) => void;
+    removeActiveDevice: (idToBeRemoved: string) => void;
+    setPlaybackTime: (val: number) => void;
     reset: () => void;
 }
 
@@ -53,16 +55,18 @@ const usePlayer = create<PlayerStore>((set) => ({
     muted: false,
     isActiveUser: true,
     deviceId: '',
-    activeDeviceId: '',
+    activeDeviceIds: [],
     playbackTime: 0,
     askForPlayer: false,
-    setActiveDeviceId: (id: string) => set({ activeDeviceId: id }), 
+    addActiveDevice: (id: string) => set((state) => ({ activeDeviceIds: [...state.activeDeviceIds, id]})), 
+    removeActiveDevice: (idToBeRemoved: string) => set(state => ({ activeDeviceIds: [...state.activeDeviceIds.filter(id=> id !== idToBeRemoved)]})),
     setAskForPlayer: (val: boolean) => set({ askForPlayer: val}),
     setDeviceId: (id: string) => set({ deviceId: id }),
     setActiveUser: (val: boolean) => set({ isActiveUser: val}),
     setPlaying: (val: boolean) => set({ playing: val }),
     toggleMuted: () => set((state) => ({ muted: !state.muted })),
     toggleShuffle: () => set((state) => ({ shuffle: !state.shuffle })), // TODO: Add change playlist logic
+    setPlaybackTime: (val: number) => set({ playbackTime: val }),
     setRepeat: () => set((state) => { 
         let newState: 'off' | 'all' | 'one' = 'off';
         if(state.repeat === 'off')
@@ -76,7 +80,7 @@ const usePlayer = create<PlayerStore>((set) => ({
     setActiveId: (id: string) => set({ activeId: id }),
     setIds: (ids: string[]) => set({ ids }),
     setNewState: (newState: Partial<PlayerStore>) => set(newState),
-    reset: () => set({ ids: [], activeId: '', playing: false, volume: 1, shuffle: false, repeat: 'off', muted: false, isActiveUser: false, activeDeviceId: '', playbackTime: 0}),
+    reset: () => set({ ids: [], activeId: '', playing: false, volume: 1, shuffle: false, repeat: 'off', muted: false, isActiveUser: false, activeDeviceIds: [], playbackTime: 0}),
 }))
 
 export default usePlayer;

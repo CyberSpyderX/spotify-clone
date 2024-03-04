@@ -17,13 +17,17 @@ import { twMerge } from "tailwind-merge";
 import axios from "axios";
 import MediaItem from "./MediaItem";
 import Image from "next/image";
+import SearchedSongItem, { SearchedSong } from "./SearchedSongItem";
+import { PulseLoader } from "react-spinners";
 
 
 const UploadModal = () => {
     const [isLoading, setIsLoading] = useState(false);
+    const [gotSpotifyTracks, setGotSpotifyTracks] = useState(false);
     const [uploadType, setUploadType] = useState(0);
-    const [onlineSearchResults, setOnlineSearchResults] = useState([]);
+    const [onlineSearchResults, setOnlineSearchResults] = useState<SearchedSong[]>([]);
     const supabaseClient = useSupabaseClient();
+    const [selectedSong, setSelectedSong] = useState<number>();
     const { user } = useUser();
     const uploadModal = useUploadModal();
     const router = useRouter();
@@ -40,34 +44,69 @@ const UploadModal = () => {
     const onChange = (open: boolean) => {
         if(!open) {
             reset();
+            setSelectedSong(undefined);
+            setOnlineSearchResults([]);
             uploadModal.onClose();
         }
     }
-    
-    useEffect(() => {
-            
-    }, [onlineSearchResults]);
 
     const onSubmit: SubmitHandler<FieldValues> = async (values) => {
 
+        setIsLoading(true);
+        setOnlineSearchResults([]);
         if(!uploadType) {
-            const title = values.title;
-            
-            await axios.get('http://localhost:3000/api/getSpotifyTracks?track='+title)
-                .then(resp => {setOnlineSearchResults(resp.data.tracks)});
-            
+            if(onlineSearchResults.length > 0 && selectedSong !== undefined) {
+                const songData = onlineSearchResults[selectedSong];
+                let title = songData.title;
+                let artist = songData.artists;
+                if(title.indexOf('From') !== -1) {
+                    title = title.substring(0, title.indexOf(' From'));
+                }
+                artist = artist.substring(0, artist.indexOf(' '));
+                const query = songData['artists'] + ' - ' + title;
+                
+                const path = await axios.get('http://localhost:3000/api/getSongFile', {
+                    params: {
+                        name: query,
+                        coverPath: songData.imageUrl,
+                        userId: user?.id
+                    }
+                });
+                console.log(path);
+                
+                if(path.data.error) {
+                    return toast.error(path.data.error);
+                } 
+                
+                router.refresh();
+                toast.success(path.data.message);
+                reset();
+                uploadModal.onClose();
+            }
+            else {
+                const title = values.title;
+                await axios.get('http://localhost:3000/api/getSpotifyTracks?track='+title)
+                    .then(resp => {setOnlineSearchResults(resp.data.tracks)});
+                setGotSpotifyTracks(true);
+                setSelectedSong(undefined);
+            }
+
         } else {
 
             try {
-                setIsLoading(true);
                 
                 const songFile = values.song?.[0];
                 const coverFile = values.cover?.[0];
 
+                
                 if(!user || !songFile || !coverFile) {
                     toast.error('Missing fields');
                     return;
                 }
+
+                console.log( songFile,  coverFile);
+                console.log(typeof songFile, typeof coverFile);
+
                 const uniqueId = uniqid();
                 const { 
                     data: songData,
@@ -121,16 +160,15 @@ const UploadModal = () => {
             } catch (err) {
                 toast.error("Something went wrong!");
                 
-            } finally {
-                setIsLoading(false);
             }
         }
+        setIsLoading(false);
     }
 
     return (
         <Modal
             title="Add a song"
-            description="Upload an mp3 file"
+            description={!uploadType ? "Search for a song online": "Upload an mp3 file"}
             isOpen={uploadModal.isOpen}
             onChange={onChange}
         >
@@ -226,43 +264,37 @@ const UploadModal = () => {
                     />
                     {
                         onlineSearchResults.length ? 
-                            onlineSearchResults.map((item, index) => (
-                                <div
-                                key={item.imageUrl} 
-                                className="flex
-                                items-center
-                                gap-x-3
-                                p-2
-                                hover:bg-neutral-900/50
-                                rounded-md
-                                cursor-pointer">
-                                    <div className="
-                                    relative
-                                    rounded-md
-                                    min-h-[48px]
-                                    min-w-[48px]
-                                    overflow-hidden
-                                    ">
-                                        <Image 
-                                            src={item.imageUrl || "/images/liked.png"}
-                                            fill
-                                            alt="Song Cover"
-                                            className="object-cover"
-                                        />
-                                    </div>
-                                    <div className="flex flex-col overflow-hidden">
-                                    <p className="text-white truncate">
-                                        {item.title}
-                                    </p>
-                                    <p className="text-sm truncate text-neutral-400">
-                                        {item.artists}
-                                    </p>
-                                </div>
-                                </div>
+                            onlineSearchResults.map((item: SearchedSong, idx) => (
+                                <SearchedSongItem 
+                                    song={item} 
+                                    key={idx}
+                                    isSelected={selectedSong === idx}
+                                    onClick={() => setSelectedSong(idx)}/>
+                                
                             ))
                         : null
                     }
-                    <Button type="submit">Search</Button>
+                    <div className="flex gap-2">
+                        { onlineSearchResults.length ? 
+                            <Button
+                                className="flex-1"
+                                type="submit"
+                            >
+                                Search
+                            </Button>
+                            : null
+                        }
+                        <Button
+                            className="flex-1"
+                            disabled={isLoading || 
+                                (onlineSearchResults.length !== 0 && 
+                                selectedSong === undefined)}
+                            type="submit">
+                                {isLoading ? 
+                                <PulseLoader color="green" /> : 
+                                (gotSpotifyTracks ? ('Upload Song'): 'Search')}
+                        </Button>
+                    </div>
                 </form>
                 }
         </Modal>

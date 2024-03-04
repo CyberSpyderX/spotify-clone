@@ -8,6 +8,8 @@ import { ModalProvider } from "@/providers/ModalProvider";
 import ToasterProvider from "@/providers/ToasterProvider";
 import getSongsByUserId from "@/actions/getSongsByUserId";
 import Player from "@/components/Player";
+import { useEffect } from "react";
+import { useSessionContext } from "@supabase/auth-helpers-react";
 
 const font = Figtree({ subsets: ["latin"] });
 
@@ -24,7 +26,7 @@ export default async function RootLayout({
   children: React.ReactNode; 
 }>) {
   const songs = await getSongsByUserId();
-
+  
   return (
     <html lang="en">
       <body className={font.className}>

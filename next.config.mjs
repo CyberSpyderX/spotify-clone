@@ -11,6 +11,7 @@ const nextConfig = {
         domains: [
             "gjxpeuintxbmqwrgvhge.supabase.co",
             "i.scdn.co",
+            "open.spotifycdn.com"
         ]
     },
     webpack: (config, { isServer }) => {

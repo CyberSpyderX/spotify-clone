@@ -1,3 +1,4 @@
+import { PlaybackUser } from "@/hooks/usePlaybackUsers";
 import { BroadcastPlayerStore, PlayerStore } from "@/hooks/usePlayer";
 
 export const getSecondsToMins: (value: number) => string = (value) => {
@@ -32,11 +33,19 @@ export const getDeviceType: (userAgent: string, platform?: string, isBrave?: boo
     if(isiPad) {
         return { device_type: 'iPad', device_type_icon: 'iPad'};
     }
-
-
     return deviceType;
 }
 
+export function getDeviceIcon(id: string, users: PlaybackUser[]): string {
+    console.log(id, users, users.find(user => user.id === id)?.device_type_icon ?? '');
+    
+    return users.find(user => user.id === id)?.device_type_icon ?? '';
+}
+export function getDeviceTypeString(id: string, users: PlaybackUser[]): string {
+    console.log(id, users, users.find(user => user.id === id)?.device_type ?? '');
+    
+    return users.find(user => user.id === id)?.device_type ?? '';
+}
 export const getBroadcastPlayer = (player: PlayerStore): BroadcastPlayerStore => {
     return {
         ids: player.ids,
@@ -46,7 +55,7 @@ export const getBroadcastPlayer = (player: PlayerStore): BroadcastPlayerStore =>
         shuffle: player.shuffle,
         repeat: player.repeat,
         muted: player.muted,
-        activeDeviceId: player.activeDeviceId,
+        activeDeviceIds: player.activeDeviceIds,
         playbackTime: player.playbackTime,
     }
 }

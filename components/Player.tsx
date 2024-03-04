@@ -8,7 +8,7 @@ import { useEffect, useRef } from "react";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { useSessionContext } from "@supabase/auth-helpers-react";
 import uniqid from "uniqid";
-import { getDeviceType } from "@/libs/utils";
+import { getBroadcastPlayer, getDeviceType } from "@/libs/utils";
 import usePlaybackUsers, { PlaybackUser } from "@/hooks/usePlaybackUsers";
 
 const Player = () => {
@@ -33,18 +33,19 @@ const Player = () => {
                 console.log('Connected to channel!');
                 const id = uniqid();
                 player.setDeviceId(id);
+                
                 const device_type = getDeviceType(navigator.userAgent, navigator.platform, !!(navigator?.brave));
                 const myUser = { id, ...device_type };
                 my_curr_user = myUser;
                 playbackUsers.setMyUser(myUser);
-
+                playbackUsers.addUser(myUser);
                 console.log('My user:', myUser);
                 
                 channel.send({
                     type: 'broadcast',
                     event: 'new_user',
                     payload: { user: myUser },
-                }).then((response) => {console.log('new_user message: ' +  JSON.stringify(response) + ' - ' +  player.activeDeviceId)});
+                }).then((response) => {console.log('new_user message: ' +  JSON.stringify(response) + ' - ' +  player.activeDeviceIds)});
 
                 channel.on("broadcast", { event: 'new_user'},
                 (data) => { 
@@ -62,7 +63,6 @@ const Player = () => {
                 channel.on("broadcast", { event: 'existing_user' },
                     (data) => { 
                         console.log('Existing user message from... ', data.payload.user);
-                        console.log('Current player: ', player);
                         
                         playbackUsers.addUser(data.payload.user);
                     });
@@ -103,7 +103,7 @@ const Player = () => {
 
     useEffect(() => {
         if(player.activeId) {
-            console.log('Player changed...', player);
+            console.log('Player changed...', { deviceId: player.deviceId ,...getBroadcastPlayer(player)});
         }
     }, [player]);
 

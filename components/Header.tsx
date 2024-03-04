@@ -5,7 +5,7 @@ import { BiSearch } from "react-icons/bi";
 import { HiHome } from "react-icons/hi";
 import { RxCaretLeft, RxCaretRight } from "react-icons/rx";
 import { twMerge } from "tailwind-merge";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSessionContext, useSupabaseClient } from "@supabase/auth-helpers-react";
 
 import useAuthModal from "@/hooks/useAuthModal";
 import { useUser } from "@/hooks/useUser";
@@ -15,6 +15,7 @@ import { FaUserAlt } from "react-icons/fa";
 import toast from "react-hot-toast";
 import usePlayer from "@/hooks/usePlayer";
 import usePlaybackUsers from "@/hooks/usePlaybackUsers";
+import { supabase } from "@supabase/auth-ui-shared";
 
 interface HeaderProps {
     children: React.ReactNode;
@@ -27,12 +28,32 @@ const Header: React.FC<HeaderProps> = ({
     const router = useRouter();
     const { onOpen } = useAuthModal();
     
-    const supabaseClient = useSupabaseClient();
     const { user, subscription } = useUser();
     const player = usePlayer();
     const playbackUsers = usePlaybackUsers();
-    
-    const handleLogout = async () => {
+    const { supabaseClient, session } = useSessionContext();
+    const isActiveDevice = player.activeDeviceIds.includes(player.deviceId);
+    const handleLogout = async () => { 
+        
+        console.log('Logging out!');
+        if(isActiveDevice) {
+            console.log('This is the active device!');
+            console.log('Sending out new activeDeviceIds to ', [...player.activeDeviceIds.filter(id => id !== player.deviceId)]);
+            
+            supabaseClient.channel(session?.user.email!).send({
+                type: 'broadcast',
+                event: 'set_player_config',
+                payload: { activeDeviceIds: [...player.activeDeviceIds.filter(id => id !== player.deviceId)], playing: false } 
+            });
+        }
+        
+        supabaseClient.channel(session?.user.email!).send({
+            type: 'broadcast',
+            event: 'leaving_user',
+            payload: {id: usePlaybackUsers.getState().myUser?.id }
+        }).then(resp => { 
+            console.log('Leaving user broacast sent for id: ', player.deviceId);
+        });
         const { error } = await supabaseClient.auth.signOut();
         player.reset();
         router.refresh();

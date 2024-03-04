@@ -14,6 +14,7 @@ import usePlayer from "@/hooks/usePlayer";
 import { twMerge } from "tailwind-merge";
 import { useSessionContext } from "@supabase/auth-helpers-react";
 import { RealtimeChannel } from "@supabase/supabase-js";
+import usePlaybackUsers from "@/hooks/usePlaybackUsers";
 
 interface SidebarProps {
     children: React.ReactNode;
@@ -25,12 +26,25 @@ const Sidebar: React.FC<SidebarProps> = ({
     songs
 }) => {
     const {supabaseClient: supabase, session} = useSessionContext();
-    const [email, setEmail] = useState('')
+    
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            if(session?.user.email) {
+                console.log('Unloading...');
+                
+                supabase.channel(session?.user.email).send({
+                    type: 'broadcast',
+                    event: 'leaving_user',
+                    payload: {id: usePlaybackUsers.getState().myUser?.id }
+                });
+            }
+        };
 
-    let playbackChannel = useRef<RealtimeChannel>();
-    let pbChannelUser = useRef<RealtimeChannel>();
-    let pbChannelPlayerCfg = useRef<RealtimeChannel>();
-
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        }
+    }, [session?.user.email]);
     const player = usePlayer();
     
     const pathname = usePathname();
@@ -51,7 +65,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     ], [pathname]);
 
     return (
-        <div className={twMerge(`flex h-full p-2 gap-2 pb-0`,
+        <div className={twMerge(`flex h-full p-2 gap-2`,
             `h-[calc(100%-${player.activeId ? (player.deviceId !== player.activeDeviceId ? 112 : 80) : 0} px)]`
             
         )}>

@@ -1,7 +1,9 @@
 import usePlaybackUsers, { PlaybackUser } from "@/hooks/usePlaybackUsers";
 import { PlayerStore } from "@/hooks/usePlayer";
 import { RealtimeChannel } from "@supabase/supabase-js";
+import Image from "next/image";
 import { useRef } from "react";
+import { FaRegPauseCircle } from "react-icons/fa";
 import { twMerge } from "tailwind-merge";
 
 interface IconContainerProps {
@@ -9,7 +11,6 @@ interface IconContainerProps {
     iconSvgPath?: string[];
     style?: string;
     onClick?: (id?: string) => void;
-    refs?: (x: React.ReactNode) => void
 }
 interface VolumeIconProps
     extends IconContainerProps {
@@ -18,7 +19,7 @@ interface VolumeIconProps
 
 interface ConnectToADeviceIconProps 
     extends IconContainerProps {
-        type: 'iPad' | 'iPhone' | 'Web' | '';
+        type: 'iPad' | 'iPhone' | 'Web' | 'Off' | 'Multiple';
         users: PlaybackUser[];
         channel: RealtimeChannel;
         player: PlayerStore;
@@ -34,15 +35,10 @@ interface RepeatIconProps
         state: string;
 }
 
-export const IconContainer: React.FC<IconContainerProps>  = ({ children, style, onClick, iconSvgPath, refs }) => {
-    const divRef = useRef<HTMLDivElement>(null);
-
-    if(refs && divRef.current) {
-        refs(divRef.current.offsetLeft + divRef.current.offsetWidth / 2);
-    }
-
+export const IconContainer: React.FC<IconContainerProps>  = ({ children, style, onClick, iconSvgPath }) => {
+    
     return (
-        <div ref={divRef} onClick={onClick} className={twMerge(`
+        <div onClick={onClick} className={twMerge(`
         h-8 
         w-8 
         flex 
@@ -54,6 +50,7 @@ export const IconContainer: React.FC<IconContainerProps>  = ({ children, style, 
                 width="16"
                 height="16"
                 viewBox="0 0 16 16"
+                className="flex justify-center items-center"
                 xmlns="http://www.w3.org/2000/svg"
             >
                 {
@@ -149,56 +146,38 @@ export const VolumeIcon: React.FC<VolumeIconProps> = ({ volume, onClick }) => {
         />
     );
 }
-
-export const ConnectToADeviceIcon: React.FC<ConnectToADeviceIconProps> = ({ onClick, refs, type, users, channel, player, songElapsedTime }) => {
+export const deviceIcons = {
+    'iPad': ['M1 1.75C1 .784 1.784 0 2.75 0h10.5C14.216 0 15 .784 15 1.75v12.5A1.75 1.75 0 0 1 13.25 16H2.75A1.75 1.75 0 0 1 1 14.25V1.75zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25V1.75a.25.25 0 0 0-.25-.25H2.75z',
+    'M9 12a1 1 0 1 1-2 0 1 1 0 0 1 2 0z'],
+    'iPhone': ['M8 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z', 'M4.75 0A1.75 1.75 0 0 0 3 1.75v12.5c0 .966.784 1.75 1.75 1.75h6.5A1.75 1.75 0 0 0 13 14.25V1.75A1.75 1.75 0 0 0 11.25 0h-6.5zM4.5 1.75a.25.25 0 0 1 .25-.25h6.5a.25.25 0 0 1 .25.25v12.5a.25.25 0 0 1-.25.25h-6.5a.25.25 0 0 1-.25-.25V1.75z'],
+    'Web': ['M2 3.75C2 2.784 2.784 2 3.75 2h8.5c.966 0 1.75.784 1.75 1.75v6.5A1.75 1.75 0 0 1 12.25 12h-8.5A1.75 1.75 0 0 1 2 10.25v-6.5zm1.75-.25a.25.25 0 0 0-.25.25v6.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-6.5a.25.25 0 0 0-.25-.25h-8.5zM.25 15.25A.75.75 0 0 1 1 14.5h14a.75.75 0 0 1 0 1.5H1a.75.75 0 0 1-.75-.75z'],
+    'Off': ['M6 2.75C6 1.784 6.784 1 7.75 1h6.5c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0 1 14.25 15h-6.5A1.75 1.75 0 0 1 6 13.25V2.75zm1.75-.25a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h6.5a.25.25 0 0 0 .25-.25V2.75a.25.25 0 0 0-.25-.25h-6.5zm-6 0a.25.25 0 0 0-.25.25v6.5c0 .138.112.25.25.25H4V11H1.75A1.75 1.75 0 0 1 0 9.25v-6.5C0 1.784.784 1 1.75 1H4v1.5H1.75zM4 15H2v-1.5h2V15z',
+    'M13 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm-1-5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z'],
+    'Multiple': ['M 7.8002 11 C 7.2479 11 6.8002 11.4477 6.8002 12 C 6.8002 12.5523 7.2479 13 7.8002 13 V 11 Z M 7.8102 13 C 8.3625 13 8.8102 12.5523 8.8102 12 C 8.8102 11.4477 8.3625 11 7.8102 11 V 13 Z M 10.4907 9.04 C 10.8993 9.4116 11.5317 9.3817 11.9033 8.9732 C 12.275 8.5646 12.245 7.9322 11.8365 7.5605 L 10.4907 9.04 Z M 13.8541 5.3403 C 14.2626 5.7119 14.8951 5.682 15.2667 5.2734 C 15.6384 4.8649 15.6084 4.2324 15.1999 3.8608 L 13.8541 5.3403 Z M 3.7639 7.5605 C 3.3554 7.9322 3.3255 8.5646 3.6971 8.9732 C 4.0687 9.3817 4.7012 9.4116 5.1097 9.04 L 3.7639 7.5605 Z M 0.4006 3.8608 C -0.008 4.2324 -0.0379 4.8649 0.3337 5.2734 C 0.7053 5.682 1.3378 5.7119 1.7463 5.3403 L 0.4006 3.8608 Z M 7.8002 13 H 7.8102 V 11 H 7.8002 V 13 Z M 7.8002 8 C 8.8369 8 9.7795 8.3931 10.4907 9.04 L 11.8365 7.5605 C 10.7715 6.5918 9.3538 6 7.8002 6 V 8 Z M 7.8002 3 C 10.1321 3 12.2548 3.8855 13.8541 5.3403 L 15.1999 3.8608 C 13.2468 2.0842 10.6489 1 7.8002 1 V 3 Z M 5.1097 9.04 C 5.8209 8.3931 6.7635 8 7.8002 8 V 6 C 6.2466 6 4.8289 6.5918 3.7639 7.5605 L 5.1097 9.04 Z M 1.7463 5.3403 c 1.5993 -1.4548 3.722 -2.3403 6.0539 -2.3403 v -2 c -2.8487 0 -5.4465 1.0842 -7.3996 2.8608 l 1.3458 1.4795 Z'],
+    'iPhone-big': ['M5 5a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V5zm3-1a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H8z', 'M13.25 16.75a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0z'],
+    'iPad-big': ['M3 5a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V5zm3-1a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H6z', 'M13.25 16.75a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0z'],
+    'Web-big': ['M0 21a1 1 0 0 1 1-1h22a1 1 0 1 1 0 2H1a1 1 0 0 1-1-1zM3 5a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V5zm3-1a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H6z']
+}
+export const ConnectToADeviceIcon: React.FC<ConnectToADeviceIconProps> = ({ onClick, type, children }) => {
     let style = "cursor-pointer fill-[#1db954]"; 
     
-    let iconSvgPath = [];
+    let iconSvgPath = deviceIcons[type];
 
-    if(type === 'iPad') {
-        iconSvgPath = ['M1 1.75C1 .784 1.784 0 2.75 0h10.5C14.216 0 15 .784 15 1.75v12.5A1.75 1.75 0 0 1 13.25 16H2.75A1.75 1.75 0 0 1 1 14.25V1.75zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25V1.75a.25.25 0 0 0-.25-.25H2.75z',
-                        'M9 12a1 1 0 1 1-2 0 1 1 0 0 1 2 0z'];
-        
-    } else if(type === 'iPhone') {
-        iconSvgPath = ['M8 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z', 'M4.75 0A1.75 1.75 0 0 0 3 1.75v12.5c0 .966.784 1.75 1.75 1.75h6.5A1.75 1.75 0 0 0 13 14.25V1.75A1.75 1.75 0 0 0 11.25 0h-6.5zM4.5 1.75a.25.25 0 0 1 .25-.25h6.5a.25.25 0 0 1 .25.25v12.5a.25.25 0 0 1-.25.25h-6.5a.25.25 0 0 1-.25-.25V1.75z'];
-    } else if(type === 'Web') {
-        iconSvgPath = ['M2 3.75C2 2.784 2.784 2 3.75 2h8.5c.966 0 1.75.784 1.75 1.75v6.5A1.75 1.75 0 0 1 12.25 12h-8.5A1.75 1.75 0 0 1 2 10.25v-6.5zm1.75-.25a.25.25 0 0 0-.25.25v6.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-6.5a.25.25 0 0 0-.25-.25h-8.5zM.25 15.25A.75.75 0 0 1 1 14.5h14a.75.75 0 0 1 0 1.5H1a.75.75 0 0 1-.75-.75z'];
-    } else {
-        iconSvgPath = ['M6 2.75C6 1.784 6.784 1 7.75 1h6.5c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0 1 14.25 15h-6.5A1.75 1.75 0 0 1 6 13.25V2.75zm1.75-.25a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h6.5a.25.25 0 0 0 .25-.25V2.75a.25.25 0 0 0-.25-.25h-6.5zm-6 0a.25.25 0 0 0-.25.25v6.5c0 .138.112.25.25.25H4V11H1.75A1.75 1.75 0 0 1 0 9.25v-6.5C0 1.784.784 1 1.75 1H4v1.5H1.75zM4 15H2v-1.5h2V15z',
-                    'M13 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm-1-5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z'];
-        style = 'fill-neutral-400 hover:fill-white transition';
-    }
-
-    function handleClick(id: string) {
-        channel.send({
-            type: 'broadcast',
-            event: 'set_player_config',
-            payload: { activeDeviceId: id, originatedBy: player.deviceId, playbackTime: songElapsedTime }
-        });
-        player.setActiveDeviceId(id);
-    }
+    // function handleClick(id: string) {
+    //     channel.send({
+    //         type: 'broadcast',
+    //         event: 'set_player_config',
+    //         payload: { activeDeviceId: id, originatedBy: 'all', playbackTime: songElapsedTime }
+    //     }).then(resp => { console.log(` Active device changed to ${id} and playbacktime: ${songElapsedTime} ; Resp`, resp) });
+    // }
 
     return (
         <IconContainer
             style={style}
             iconSvgPath={iconSvgPath}
             onClick={onClick}
-            refs={refs}
         >
-            { type !== '' && <div className="border-solid border-b-[#1ed760] border-b-8 border-x-transparent border-x-8 border-t-0 absolute bottom-[32px]"></div>}
-            
-            <div className="w-[320px] cursor-auto p-3 bg-black absolute bottom-[122px] rounded-lg bg-neutral-900/80 backdrop-blur-sm">
-                <div className="w-full h-[50px] bg-neutral-800/80 p-2">
-                    Current device
-                    <hr></hr>
-
-                </div>
-                <div className="w-full p-2 flex flex-col rounded-md">
-                    {
-                        users.map(user => <div key={user.id} className="cursor-pointer" onClick={() => handleClick(user.id)}>{user.device_type}</div>)   
-                    }
-                </div>
-            </div>
+            {children}
         </IconContainer>
     );
 }
