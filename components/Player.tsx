@@ -34,8 +34,8 @@ const Player = () => {
                 const id = uniqid();
                 player.setDeviceId(id);
                 
-                const device_type = getDeviceType(navigator.userAgent, navigator.platform, !!(navigator?.brave));
-                const myUser = { id, ...device_type };
+                // const device_type = getDeviceType(navigator.userAgent, navigator?.platform, !!(navigator?.brave));
+                const myUser = { id, device_type: 'iPad', device_type_icon: 'iPad' };
                 my_curr_user = myUser;
                 playbackUsers.setMyUser(myUser);
                 playbackUsers.addUser(myUser);
