@@ -481,9 +481,8 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
                                           key={idx} 
                                           className="w-8 h-8 flex justify-center items-center rounded-full border-neutral-600 border-2"
                                           onClick={(event) => {
+                                            if(player.activeDeviceIds.length === 1) { return }
                                             event.stopPropagation();
-                                            console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
-                                            
                                             playbackChannel.current.send({
                                                 type: 'broadcast',
                                                 event: 'set_player_config',
