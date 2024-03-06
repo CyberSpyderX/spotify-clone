@@ -165,14 +165,6 @@ export const ConnectToADeviceIcon: React.FC<ConnectToADeviceIconProps> = ({ onCl
     
     let iconSvgPath = deviceIcons[type];
 
-    // function handleClick(id: string) {
-    //     channel.send({
-    //         type: 'broadcast',
-    //         event: 'set_player_config',
-    //         payload: { activeDeviceId: id, originatedBy: 'all', playbackTime: songElapsedTime }
-    //     }).then(resp => { console.log(` Active device changed to ${id} and playbacktime: ${songElapsedTime} ; Resp`, resp) });
-    // }
-
     return (
         <IconContainer
             style={style}

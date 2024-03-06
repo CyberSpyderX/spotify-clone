@@ -421,7 +421,7 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
                         type={
                             player.activeDeviceIds.length > 1 ? 'Multiple' :
                             player.activeDeviceIds[0] === player.deviceId ? 'Off' :
-                            playbackUsers.users.find(user => user.id === player.activeDeviceIds[0])
+                            playbackUsers.users.find(user => user.id === player.activeDeviceIds[0]).device_type_icon
                         }
                     >
                     {

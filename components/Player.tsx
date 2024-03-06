@@ -34,13 +34,28 @@ const Player = () => {
                 const id = uniqid();
                 player.setDeviceId(id);
                 
-                // const device_type = getDeviceType(navigator.userAgent, navigator?.platform, !!(navigator?.brave));
-                const myUser = { id, device_type: 'iPad', device_type_icon: 'iPad' };
+                const device_type = getDeviceType(navigator.userAgent, navigator?.platform, !!(navigator?.brave));
+                console.log(navigator.userAgent, navigator.platform, navigator?.brave, !!(navigator?.brave));
+                
+                // const myUser = { id, device_type: 'iPad', device_type_icon: 'iPad' };
+                const myUser = { id, ...device_type }
                 my_curr_user = myUser;
                 playbackUsers.setMyUser(myUser);
                 playbackUsers.addUser(myUser);
                 console.log('My user:', myUser);
                 
+                channel.send({
+                    type:'broadcast',
+                    event: 'debug',
+                    payload: { userAgent: navigator.userAgent, platform: navigator.platform, brave: navigator?.brave}
+                }).then(resp => {
+                    console.log('Debug message sent: ', JSON.stringify(resp), ' ', JSON.stringify( { userAgent: navigator.userAgent, platform: navigator.platform, brave: navigator?.brave}));
+                });
+
+                channel.on("broadcast",{ event: "debug" }, (data) => {
+                    console.log('Debug message received! ', JSON.stringify(data));
+                });
+
                 channel.send({
                     type: 'broadcast',
                     event: 'new_user',

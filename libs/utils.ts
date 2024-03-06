@@ -12,7 +12,7 @@ export const getDeviceType: (userAgent: string, platform?: string, isBrave?: boo
         return { device_type: 'Web Player (Brave)', device_type_icon: 'Web'};
     }
     
-    let deviceType = { device_type: '', device_type_icon: '' };
+    let deviceType = { device_type: 'Web Player', device_type_icon: 'Web' };
 
     const isWindows = (platform && platform.toLowerCase() === 'win32') || 
         userAgent.indexOf('Windows') !== -1;
@@ -32,6 +32,10 @@ export const getDeviceType: (userAgent: string, platform?: string, isBrave?: boo
     const isiPad = (navigator.userAgent.match(/Mac/) && navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
     if(isiPad) {
         return { device_type: 'iPad', device_type_icon: 'iPad'};
+    }
+
+    if(navigator.userAgent.includes('Android')) {
+        return { device_type: 'Mobile Web Player', device_type_icon: 'iPhone' };
     }
     return deviceType;
 }
