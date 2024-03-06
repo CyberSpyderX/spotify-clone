@@ -201,7 +201,7 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
             }
         }
 
-    }, [player.playing]);
+    }, [player.playing, isLoading]);
 
 
     useEffect(() => {
