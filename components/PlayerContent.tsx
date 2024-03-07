@@ -66,9 +66,11 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
             onloaderror: () => {
                 console.log('Loading error...');
             }, onplayerror: (id, error) => {
-                console.log('Playing error... ', id, error);
-                song.current.play();
-                console.log('Manually played...');
+                console.log('Song Error occured...', error);
+                
+                song.current.once('unlock', function() {
+                    song.current.play();
+                  });
                 
             }, onend: () => {
                 if(isActiveDevice) {

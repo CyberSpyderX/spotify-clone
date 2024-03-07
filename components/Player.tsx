@@ -60,7 +60,7 @@ const Player = () => {
                     event: 'new_user',
                     payload: { user: myUser },
                 }).then((response) => {console.log('new_user message: ' +  JSON.stringify(response) + ' - ' +  player.activeDeviceIds)});
-
+                
                 channel.on("broadcast", { event: 'new_user'},
                 (data) => { 
                     console.log("New user logged in....", data.payload.user);
