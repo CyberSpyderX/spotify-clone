@@ -50,7 +50,8 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
 
     const Icon = player.playing ? IoMdPause : IoMdPlay;
     const isActiveDevice = player.activeDeviceIds.includes(player.deviceId);
-
+    console.log('isActiveDevice: ', isActiveDevice);
+    
     useEffect(() => {
         console.log('Creating PlayerContent...', isActiveDevice);
         song.current = new Howl({
@@ -60,15 +61,12 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
             html5: true,
             onload: () => {
                 console.log('Song loaded!');
-                setIsLoading(false);
-                if(isActiveDevice || player.playing) {
-                    player.setPlaying(true);
-                }
+                setIsLoading(false);                
             },
             onloaderror: () => {
                 console.log('Loading error...');
-            }, onplayerror: () => {
-                console.log('Playing error...');
+            }, onplayerror: (id, error) => {
+                console.log('Playing error... ', id, error);
             }, onend: () => {
                 if(isActiveDevice) {
                     onPlayNext();
@@ -77,11 +75,16 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
         });
         
         return () => {
-            player.setPlaying(false);
+            // player.setPlaying(false);
             song.current?.unload();
             console.log('Destroying PlayerContent...');
         }
     }, []);
+
+    useEffect(() => {
+        console.log('Song.current changed... ', song.current);
+        
+    }, [song.current]);
 
     useEffect(() => {
         console.log('Setting songElapsedTime to: ', player.playbackTime);
@@ -89,8 +92,7 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
     }, [player.playbackTime]);
 
     useEffect(() => {
-        console.log("UseEffect: activeDeviceIds ", player.playbackTime, isActiveDevice);
-
+        console.log("UseEffect: activeDeviceIds ", player.playbackTime, isActiveDevice, isLoading, player.playing, song.current.playing());
         stopRecordElapsedTime();
         if(!isActiveDevice) {
             console.log("isLoading: ", isLoading);
@@ -100,8 +102,8 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
                 song.current?.pause();
             }
         } else {
-            if(!isLoading && player.playing) {
-                console.log('Now the active device... Playing! , ', songElapsedTime);
+            if(!isLoading && player.playing && !song.current.playing()) {
+                console.log('Now the active device... Playing! , ', songElapsedTime, player.playbackTime);
                 song.current?.seek(player.playbackTime);
                 song.current?.play();
             }
@@ -109,7 +111,7 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
         if(player.playing) {
             recordElapsedTime();
         }
-    }, [player.activeDeviceIds]);
+    }, [player.activeDeviceIds, isLoading]);
 
     function recordElapsedTime() {
         if(elapsedTimeInterval.current === undefined) {
@@ -186,21 +188,20 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
     }
 
     useEffect(() => {
-        console.log('Playing changed: ', player.playing, (isActiveDevice));
+        console.log('Playing changed: ', player.playing, isActiveDevice, song.current.playing());
         
         setIsPlaying(player.playing);
         if(player.playing) {
             recordElapsedTime();
-            if(isActiveDevice && !isLoading) {
+            if(isActiveDevice && !isLoading && !song.current.playing()) {
                 song.current?.play();
             }
         } else {
             stopRecordElapsedTime();
-            if(isActiveDevice && !isLoading) {
+            if(isActiveDevice && !isLoading && song.current.playing()) {
                 song.current?.pause();
             }
         }
-
     }, [player.playing, isLoading]);
 
 
@@ -415,13 +416,13 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
                     </div>
                     
                 </div>
-                <div className="hidden md:flex justify-end items-center pr-4">
+                <div className=" md:flex justify-end items-center pr-4">
                     <ConnectToADeviceIcon
                         onClick={() => {setShowConnectDevices(prev => !prev)}}
                         type={
                             player.activeDeviceIds.length > 1 ? 'Multiple' :
                             player.activeDeviceIds[0] === player.deviceId ? 'Off' :
-                            playbackUsers.users.find(user => user.id === player.activeDeviceIds[0]).device_type_icon
+                            playbackUsers.users.find(user => user.id === player.activeDeviceIds[0])?.device_type_icon ?? 'Web'
                         }
                     >
                     {
@@ -517,7 +518,7 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
                                                 playbackChannel.current.send({
                                                     type: 'broadcast',
                                                     event: 'set_player_config',
-                                                    payload: { activeDeviceIds: [user.id], originatedBy: 'all', playbackTime: songElapsedTime},
+                                                    payload: { activeDeviceIds: [user.id], originatedBy: 'all', playbackTime: songElapsedTime, playing: true },
                                                 })
                                             }}
                                             className="
@@ -551,7 +552,7 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
                                                     playbackChannel.current.send({
                                                         type: 'broadcast',
                                                         event: 'set_player_config',
-                                                        payload: { activeDeviceIds: [ ...player.activeDeviceIds, user.id ], originatedBy: 'all', playbackTime: songElapsedTime},
+                                                        payload: { activeDeviceIds: [ ...player.activeDeviceIds, user.id ], originatedBy: 'all', playbackTime: songElapsedTime, playing: true},
                                                     })
                                                 }}
                                             />

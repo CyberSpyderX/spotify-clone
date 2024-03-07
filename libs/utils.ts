@@ -41,14 +41,10 @@ export const getDeviceType: (userAgent: string, platform?: string, isBrave?: boo
 }
 
 export function getDeviceIcon(id: string, users: PlaybackUser[]): string {
-    console.log(id, users, users.find(user => user.id === id)?.device_type_icon ?? '');
-    
-    return users.find(user => user.id === id)?.device_type_icon ?? '';
+    return users.find(user => user.id === id)?.device_type_icon ?? 'Web';
 }
 export function getDeviceTypeString(id: string, users: PlaybackUser[]): string {
-    console.log(id, users, users.find(user => user.id === id)?.device_type ?? '');
-    
-    return users.find(user => user.id === id)?.device_type ?? '';
+    return users.find(user => user.id === id)?.device_type ?? 'Web Player';
 }
 export const getBroadcastPlayer = (player: PlayerStore): BroadcastPlayerStore => {
     return {

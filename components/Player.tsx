@@ -37,7 +37,6 @@ const Player = () => {
                 const device_type = getDeviceType(navigator.userAgent, navigator?.platform, !!(navigator?.brave));
                 console.log(navigator.userAgent, navigator.platform, navigator?.brave, !!(navigator?.brave));
                 
-                // const myUser = { id, device_type: 'iPad', device_type_icon: 'iPad' };
                 const myUser = { id, ...device_type }
                 my_curr_user = myUser;
                 playbackUsers.setMyUser(myUser);
