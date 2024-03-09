@@ -302,7 +302,7 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
         <>
             {
                 song.current ?
-                <> 
+                <div> 
                     <DesktopPlayer 
                     isLoading={isLoading} 
                     songData={songData} 
@@ -321,27 +321,32 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
                     handleRepeat={handleRepeat}
                     handleVolumeChange={handleVolumeChange}
                     setShowConnectDevices={setShowConnectDevices}
-                    toggleMute={toggleMute}
-                />
-                <MobilePlayer isLoading={isLoading} 
-                    songData={songData} 
-                    handlePlayback={handlePlayback}
-                    handleShuffle={handleShuffle}
-                    Icon={Icon}
-                    volume={volume}
-                    song={song.current}
-                    songElapsedTime={songElapsedTime}
-                    showConnectDevices={showConnectDevices}
-                    isActiveDevice={isActiveDevice}
-                    playbackChannel={playbackChannel.current}
-                    onPlayNext={onPlayNext}
-                    onPlayPrevious={onPlayPrevious}
-                    handleProgressChange={handleProgressChange}
-                    handleRepeat={handleRepeat}
-                    handleVolumeChange={handleVolumeChange}
-                    setShowConnectDevices={setShowConnectDevices}
                     toggleMute={toggleMute} />
-                </>
+                    
+                    <MobilePlayer isLoading={isLoading} 
+                        songData={songData} 
+                        handlePlayback={handlePlayback}
+                        handleShuffle={handleShuffle}
+                        Icon={Icon}
+                        volume={volume}
+                        song={song.current}
+                        songElapsedTime={songElapsedTime}
+                        showConnectDevices={showConnectDevices}
+                        isActiveDevice={isActiveDevice}
+                        playbackChannel={playbackChannel.current}
+                        onPlayNext={onPlayNext}
+                        onPlayPrevious={onPlayPrevious}
+                        handleProgressChange={handleProgressChange}
+                        handleRepeat={handleRepeat}
+                        handleVolumeChange={handleVolumeChange}
+                        setShowConnectDevices={setShowConnectDevices}
+                        toggleMute={toggleMute} />
+                    
+                    <div className="h-full w-full bg-white">
+
+                    </div>
+
+                </div>
                 : null
             }        
         </>

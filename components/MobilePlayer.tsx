@@ -37,7 +37,7 @@ const MobilePlayer: React.FC<PlayerProps> = ({
     // const Icon = player.playing ? FaPause: FaPlay;
 
     return (
-        <div className="md:hidden cursor-pointer py-2 flex justify-between space-x-3"> 
+        <div className="md:hidden cursor-pointer py-2 flex justify-between space-x-3 relative">
             <div className="flex justify-start gap-x-4 truncate ">
                 <MediaItem song={songData}/>
                 <LikeButton songId={songData.id}/>

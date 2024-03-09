@@ -4,7 +4,6 @@ import Header from "@/components/Header";
 import SearchContent from "@/app/search/components/SearchContent";
 import SearchInput from "@/components/SearchInput";
 import useOnPlay from "@/hooks/useOnPlay";
-var a = require('../../extra_data/music/test.mp3')
 
 export const revalidate = 0;
 
@@ -26,9 +25,6 @@ const Search = async ({ searchParams }: SearchProps) => {
             overflow-hidden
             overflow-y-scroll
         ">
-            <audio >
-
-            </audio>
             <Header className="from-bg-neutral-900">
                 <div className="mb-2 flex flex-col gap-y-6">
                     <h1 className="text-white text-3xl font-semibold">
