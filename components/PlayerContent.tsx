@@ -23,9 +23,9 @@ import { getBroadcastPlayer, getDeviceIcon, getDeviceTypeString } from "@/libs/u
 import Image from "next/image";
 import { FaRegPauseCircle } from "react-icons/fa";
 import { PiPlusCircleLight } from "react-icons/pi";
-
-
-
+import { onPlayNext } from "@/libs/playerFunctions";
+import DesktopPlayer from "./DesktopPlayer";
+import MobilePlayer from "./MobilePlayer";
 
 interface PlayerContentProps {
     key: string;
@@ -39,57 +39,46 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
     const playbackUsers = usePlaybackUsers();
     const [volume, setVolume] = useState(player.volume);
     const [isLoading, setIsLoading] = useState(true);
-    const [showConnectDevices, setShowConnectDevices] = useState(true);
+    const [showConnectDevices, setShowConnectDevices] = useState(false);
     const [isPlaying, setIsPlaying] = useState(player.playing);
+    const [isMobilePlayerShowing, setIsMobilePlayerShowing] = useState(false);
     const [songElapsedTime, setSongElapsedTime] = useState(player.playbackTime);
     const song = useRef<Howl>();
-    const volumeBuffer = useRef(0);
+    const volumeBuffer = useRef(player.volume);
     const elapsedTimeInterval: any = useRef();
     const { supabaseClient, session } = useSessionContext();
     const playbackChannel = useRef(supabaseClient.channel(session?.user.email!));
 
     const Icon = player.playing ? IoMdPause : IoMdPlay;
     const isActiveDevice = player.activeDeviceIds.includes(player.deviceId);
-    console.log('isActiveDevice: ', isActiveDevice);
     
     useEffect(() => {
         console.log('Creating PlayerContent...', isActiveDevice);
         song.current = new Howl({
             src: songUrl,
             volume: volume,
+            autoplay: true,
             format: 'mp3',
             html5: true,
             onload: () => {
                 console.log('Song loaded!');
-                setIsLoading(false);                
+                setIsLoading(false);
             },
             onloaderror: () => {
                 console.log('Loading error...');
             }, onplayerror: (id, error) => {
                 console.log('Song Error occured...', error);
-                
-                song.current.once('unlock', function() {
-                    song.current.play();
-                  });
-                
             }, onend: () => {
-                if(isActiveDevice) {
-                    onPlayNext();
-                }
+                onPlayNext();
             }
         });
-        
+        console.log('Creating PlayerContent...', isActiveDevice);
         return () => {
             // player.setPlaying(false);
             song.current?.unload();
             console.log('Destroying PlayerContent...');
         }
     }, []);
-
-    useEffect(() => {
-        console.log('Song.current changed... ', song.current);
-        
-    }, [song.current]);
 
     useEffect(() => {
         console.log('Setting songElapsedTime to: ', player.playbackTime);
@@ -118,6 +107,50 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
         }
     }, [player.activeDeviceIds, isLoading]);
 
+    useEffect(() => {
+        console.log('Playing changed: ', player.playing, isActiveDevice, song.current.playing());
+        
+        if(player.playing) {
+            recordElapsedTime();
+            if(isActiveDevice && !isLoading && !song.current.playing()) {
+                console.log('Song playing... loading state: ', song.current.state());
+                song.current?.play();
+            }
+        } else {
+            stopRecordElapsedTime();
+            if(isActiveDevice && !isLoading && song.current.playing()) {
+                console.log('Song paused... loading state: ', song.current.state());
+                song.current?.pause();
+            }
+        }
+    }, [player.playing, isLoading]);
+
+
+    useEffect(() => {
+        setVolume(player.volume);
+        song.current?.volume(player.volume);
+    }, [player.volume]);
+
+    useEffect(() => {
+        if(player.askForPlayer && isActiveDevice) {
+            playbackChannel.current.send({
+                type: 'broadcast',
+                event: 'set_player_config',
+                payload: { originatedBy: player.deviceId, ...getBroadcastPlayer(player), playbackTime: songElapsedTime, askForPlayer: false}
+            });
+        }
+        player.setAskForPlayer(false);
+    }, [player.askForPlayer]);
+    
+    useEffect(() => {
+        console.log('Playback time changed to: ', player.playbackTime);
+        
+        if(isActiveDevice) {
+            song.current?.seek(player.playbackTime);
+        }
+    }, [player.playbackTime]);
+
+    
     function recordElapsedTime() {
         if(elapsedTimeInterval.current === undefined) {
             console.log('In recordElapsedTime... Starting up!!!');
@@ -192,72 +225,20 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
         }).then(resp => { console.log('Broacast: Previous song id: ', previousSongId, ' - Response: ', resp) });
     }
 
-    useEffect(() => {
-        console.log('Playing changed: ', player.playing, isActiveDevice, song.current.playing());
-        
-        setIsPlaying(player.playing);
-        if(player.playing) {
-            recordElapsedTime();
-            if(isActiveDevice && !isLoading && !song.current.playing()) {
-                song.current?.play();
-            }
-        } else {
-            stopRecordElapsedTime();
-            if(isActiveDevice && !isLoading && song.current.playing()) {
-                song.current?.pause();
-            }
-        }
-    }, [player.playing, isLoading]);
-
-
-    useEffect(() => {
-        setVolume(player.volume);
-        song.current?.volume(player.volume);
-    }, [player.volume]);
-
-    useEffect(() => {
-        console.log('Shuffle: ', player.shuffle);
-    }, [player.shuffle]);
-
-    useEffect(() => {
-        console.log('Asking wala effect......', player.askForPlayer , (isActiveDevice));
-        
-        if(player.askForPlayer && isActiveDevice) {
-            console.log('Sending............. ', {...getBroadcastPlayer(player), playbackTime: songElapsedTime});
-            
-            playbackChannel.current.send({
-                type: 'broadcast',
-                event: 'set_player_config',
-                payload: { originatedBy: player.deviceId, ...getBroadcastPlayer(player), playbackTime: songElapsedTime, askForPlayer: false}
-            });
-        }
-        player.setAskForPlayer(false);
-    }, [player.askForPlayer]);
-
     const handlePlayback = () => {
+        player.setPlaying(!player.playing);
         playbackChannel.current.send({
             type: 'broadcast',
             event: 'set_player_config',
-            payload: {
-                playing: !player.playing, 
-                originatedBy: player.deviceId,
-            }
+            payload: { playing: !player.playing, originatedBy: player.deviceId }
         });
-        console.log('Pause/Play player sent: ', player.playing);
-        
-        if(player.playing) {
-            player.setPlaying(false);
-        } else {
-            player.setPlaying(true);
-        }
+        console.log('Pause/Play player sent: ', !player.playing);
     }
     
     const handleVolumeChange = async (newVolume: number, commit?: boolean) => {
         
         setVolume(newVolume)
-
-        if(newVolume) { volumeBuffer.current = newVolume; }
-
+        if(newVolume) { volumeBuffer.current = newVolume }
         if(commit) { 
             player.setVolume(newVolume);
             playbackChannel.current.send({
@@ -269,9 +250,7 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
                 }
             });
             console.log('Volume broadcast sent: ', newVolume);
-            
         }
-        
     }
 
     const handleProgressChange = async (val: number[], commit: boolean = false) => {
@@ -290,12 +269,6 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
             recordElapsedTime();
         }
     }
-
-    useEffect(() => {
-        if(isActiveDevice) {
-            song.current?.seek(player.playbackTime);
-        }
-    }, [player.playbackTime]);
 
     const handleShuffle = async () => {
         playbackChannel.current.send({
@@ -316,6 +289,8 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
     }
 
     const toggleMute = () => {
+        console.log('ToggleMute volume: ', volume, volumeBuffer.current);
+        
         if(volume===0) {
             handleVolumeChange(volumeBuffer.current, true);
         } else {
@@ -324,278 +299,53 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
     }
 
     return (
-        <div className="flex flex-col">
-            <div className="grid grid-cols-2 md:grid-cols-3">
-                <div className="
-                    flex
-                    w-full
-                    justify-start
-                    items-center
-                ">
-                    <div className="flex gap-x-4">
-                        <MediaItem song={songData} />
-                        <LikeButton songId={songData.id} />
-                    </div>
-                </div>
-                <div className="
-                    flex
-                    md:hidden
-                    items-center
-                    justify-end
-                    w-full
-                    col-auto
-                ">
-                    {
-                        isLoading
-                        ? <SyncLoader color="#22c55e" />
-                        : <div
-                            onClick={handlePlayback} 
-                            className="
-                            flex
-                            items-center
-                            justify-center
-                            h-8
-                            w-8
-                            cursor-pointer
-                            text-black
-                            bg-white
-                            rounded-full
-                            hover:scale-105
-                            transition
-                        ">
-                            <Icon size={16} style={{ marginLeft: player.playing ? 0 : '3px' }} />
-                        </div>
-                    }
-                    
-                </div>
-                <div className="flex flex-col">
-                    <div className="
-                        hidden
-                        md:flex
-                        justify-center
-                        items-center
-                        pt-3
-                        w-full
-                        h-full
-                        max-w-[722px]
-                        gap-x-[8px]
-                    ">
-                        <ShuffleIcon state={player.shuffle} onClick={handleShuffle} /> 
-                        <PreviousIcon onClick={onPlayPrevious}/>
-                        {
-                            isLoading ? 
-                            <SyncLoader color="#22c55e" /> : 
-                            <div
-                                onClick={handlePlayback} 
-                                className="
-                                flex
-                                items-center
-                                justify-center
-                                h-8
-                                w-8
-                                mx-2
-                                cursor-pointer
-                                text-black
-                                bg-white
-                                rounded-full
-                                hover:scale-105
-                            ">
-                                <Icon size={20} style={{ marginLeft: player.playing ? 0 : '3px' }} />
-                            </div>
-                        }
-                        
-                        <NextIcon onClick={onPlayNext} />
-                        <RepeatIcon state={player.repeat} onClick={handleRepeat} />
-
-                    </div>
-                    <div className="
-                        flex
-                        h-auto
-                        gap-x-2
-                    ">
-                        <ProgressBar 
-                            elapsedTime={songElapsedTime} 
-                            duration={Math.trunc(song.current?.duration(0) || 0)} 
-                            handleProgressChange={handleProgressChange}    
-                        />
-                    </div>
-                    
-                </div>
-                <div className=" md:flex justify-end items-center pr-4">
-                    <ConnectToADeviceIcon
-                        onClick={() => {setShowConnectDevices(prev => !prev)}}
-                        type={
-                            player.activeDeviceIds.length > 1 ? 'Multiple' :
-                            player.activeDeviceIds[0] === player.deviceId ? 'Off' :
-                            playbackUsers.users.find(user => user.id === player.activeDeviceIds[0])?.device_type_icon ?? 'Web'
-                        }
-                    >
-                    {
-                        showConnectDevices ? 
-                        <div
-                        
-                        onClick={(event)=> {
-                            event?.stopPropagation()
-                        }}
-                        className="
-                        w-[320px]
-                        cursor-auto
-                        p-3
-                        bg-black
-                        absolute
-                        bottom-[122px]
-                        rounded-lg
-                        bg-neutral-900/90
-                        backdrop-blur-sm
-                        "
-                    >
-                        <div
-                        className="
-                            connectToDevicesDiv
-                            p-4
-                            bg-neutral-700
-                            backdrop-blur-sm
-                            font-bold
-                            text-xl
-                            rounded-md
-                            flex
-                            flex-col
-                        ">
-                            <div className="flex 
-                                w-fit 
-                                h-[20px]
-                                gap-x-2
-                                items-center
-                            ">
-                                {
-                                    player.playing ? 
-                                        <Image 
-                                        alt="Playing"
-                                        src={'https://open.spotifycdn.com/cdn/images/device-picker-equaliser-animation.946e7243.webp'} 
-                                        width={20}
-                                        height={20}
-                                    /> : <FaRegPauseCircle size={20} color="#fc3a3a"/>
-                                }
-                            Current device
-                            </div>
-                            <div className="border-1 border-white bg-gray-700 rounded-md my-4 py-[1px]" />
-
-                            <div className="flex gap-x-2">
-                                {
-                                    player.activeDeviceIds.map((id, idx) => (
-                                        <div 
-                                          key={idx} 
-                                          className="w-8 h-8 flex justify-center items-center rounded-full border-neutral-600 border-2"
-                                          onClick={(event) => {
-                                            if(player.activeDeviceIds.length === 1) { return }
-                                            event.stopPropagation();
-                                            playbackChannel.current.send({
-                                                type: 'broadcast',
-                                                event: 'set_player_config',
-                                                payload: { activeDeviceIds: [ ...player.activeDeviceIds.filter(deviceId => deviceId !== id) ], originatedBy: 'all', playbackTime: songElapsedTime},
-                                            })
-                                          }}
-                                        >
-                                            <div className="w-6 h-6 rounded-full text-black flex items-center justify-center">
-                                                <svg height={16} width={16} className="text-black">
-                                                    {
-                                                        deviceIcons[getDeviceIcon(id, playbackUsers.users)].map((d, index) => <path key={index} d={d}></path>)
-                                                    }
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    ))
-                                }
-                                
-                            </div>
-                        </div>
-                        <div className="w-full p-2 flex flex-col rounded-md text-neutral-400 gap-y-2">
-                            Other Devices
-                            {
-                                playbackUsers.users.map((user, idx) => {
-                                    if(player.activeDeviceIds.includes(user.id)) {
-                                        return
-                                    }
-                                    return (
-                                        <div key={idx}
-                                            onClick={(event) => {
-                                                event.stopPropagation();
-                                                playbackChannel.current.send({
-                                                    type: 'broadcast',
-                                                    event: 'set_player_config',
-                                                    payload: { activeDeviceIds: [user.id], originatedBy: 'all', playbackTime: songElapsedTime, playing: true },
-                                                })
-                                            }}
-                                            className="
-                                                text-white 
-                                                flex
-                                                group
-                                                justify-between
-                                                items-center
-                                                rounded-md 
-                                                cursor-pointer 
-                                                hover:bg-neutral-700 
-                                                p-3
-                                                fill-neutral-200"
-                                            >
-                                                <div className="flex gap-x-3">
-                                            <svg height={24} width={24} viewBox="0 0 24 24" className="">
-                                                {
-                                                    deviceIcons[getDeviceIcon(user.id, playbackUsers.users) + '-big'].map((d, i) => <path d={d} key={i} width={32} height={32}></path>)
-                                                }
-                                            </svg>
-                                            {
-                                                (user.id === player.deviceId) ? "This Device" : getDeviceTypeString(user.id, playbackUsers.users)
-                                            }
-                                            </div>
-                                            <PiPlusCircleLight 
-                                                size={24} 
-                                                color="green" 
-                                                className="hidden group-hover:block hover:scale-110"
-                                                onClick={(event) => {
-                                                    event.stopPropagation();
-                                                    playbackChannel.current.send({
-                                                        type: 'broadcast',
-                                                        event: 'set_player_config',
-                                                        payload: { activeDeviceIds: [ ...player.activeDeviceIds, user.id ], originatedBy: 'all', playbackTime: songElapsedTime, playing: true},
-                                                    })
-                                                }}
-                                            />
-                                        </div>
-                                    )
-                                })
-                            }
-                        </div>
-                    </div> : null
-                    }
-                    </ConnectToADeviceIcon>
-                    <div className="flex items-center gap-x-2 w-[130px]">
-                        <VolumeIcon volume={volume} onClick={toggleMute} />
-                        <Slider
-                            value={volume}
-                            onChange={handleVolumeChange}
-                        />
-                    </div>
-                </div>
-            </div>
+        <>
             {
-                !isActiveDevice && 
-                <div className="bg-[#1ed760] h-6 py-2 pl-4 justify-end pr-[73.5px] flex gap-1 w-full items-center rounded-md">
-                    <PlayingOnOtherDeviceIcon />
-                    <p className="text-black font-semibold text-[15px]">
-                        Playing on {
-                            player.activeDeviceIds.length > 1 ? 'multiple devices' : getDeviceTypeString(player.activeDeviceIds[0], playbackUsers.users)
-                        }
-                    </p>
-                </div>
-            }
-        </div>
+                song.current ?
+                <> 
+                    <DesktopPlayer 
+                    isLoading={isLoading} 
+                    songData={songData} 
+                    handlePlayback={handlePlayback}
+                    handleShuffle={handleShuffle}
+                    Icon={Icon}
+                    volume={volume}
+                    song={song.current}
+                    songElapsedTime={songElapsedTime}
+                    showConnectDevices={showConnectDevices}
+                    isActiveDevice={isActiveDevice}
+                    playbackChannel={playbackChannel.current}
+                    onPlayNext={onPlayNext}
+                    onPlayPrevious={onPlayPrevious}
+                    handleProgressChange={handleProgressChange}
+                    handleRepeat={handleRepeat}
+                    handleVolumeChange={handleVolumeChange}
+                    setShowConnectDevices={setShowConnectDevices}
+                    toggleMute={toggleMute}
+                />
+                <MobilePlayer isLoading={isLoading} 
+                    songData={songData} 
+                    handlePlayback={handlePlayback}
+                    handleShuffle={handleShuffle}
+                    Icon={Icon}
+                    volume={volume}
+                    song={song.current}
+                    songElapsedTime={songElapsedTime}
+                    showConnectDevices={showConnectDevices}
+                    isActiveDevice={isActiveDevice}
+                    playbackChannel={playbackChannel.current}
+                    onPlayNext={onPlayNext}
+                    onPlayPrevious={onPlayPrevious}
+                    handleProgressChange={handleProgressChange}
+                    handleRepeat={handleRepeat}
+                    handleVolumeChange={handleVolumeChange}
+                    setShowConnectDevices={setShowConnectDevices}
+                    toggleMute={toggleMute} />
+                </>
+                : null
+            }        
+        </>
     );
 }
 
 export default PlayerContent;
-
-/*
-
-
-*/

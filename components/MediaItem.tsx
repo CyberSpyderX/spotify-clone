@@ -29,6 +29,7 @@ const MediaItem: React.FC<MediaItemProps> = ({ song, onClick }) => {
             hover:bg-neutral-800/50
             rounded-md
             cursor-pointer
+            truncate
         ">
         <div className="
             relative

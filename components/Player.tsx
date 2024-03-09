@@ -126,8 +126,8 @@ const Player = () => {
     return (
         <div className="
             fixed
-            bottom-0
             bg-black
+            bottom-0
             w-full
             px-4
             pb-2
