@@ -52,7 +52,7 @@ export const IconContainer: React.FC<IconContainerProps>  = ({ children, style, 
             <svg
                 width={svgDim?.width ?? "16"}
                 height={svgDim?.height ?? "16"}
-                viewBox={"0 0 " + (svgDim?.width ?? '16 ') + (svgDim?.height ?? '16')}
+                viewBox={"0 0 " + (svgDim?.width ?? '16') + " " + (svgDim?.height ?? '16')}
                 className="flex justify-center items-center"
                 xmlns="http://www.w3.org/2000/svg"
             >
@@ -66,66 +66,97 @@ export const IconContainer: React.FC<IconContainerProps>  = ({ children, style, 
     );
 }
 
-export const ShuffleIcon: React.FC<ShuffleIconProps> = ({ state, onClick }) => {
+export const ShuffleIcon: React.FC<ShuffleIconProps> = ({ style, state, onClick, iconType, svgDim }) => {
+    let iconSvgPath = ["M13.151.922a.75.75 0 1 0-1.06 1.06L13.109 3H11.16a3.75 3.75 0 0 0-2.873 1.34l-6.173 7.356A2.25 2.25 0 0 1 .39 12.5H0V14h.391a3.75 3.75 0 0 0 2.873-1.34l6.173-7.356a2.25 2.25 0 0 1 1.724-.804h1.947l-1.017 1.018a.75.75 0 0 0 1.06 1.06L15.98 3.75 13.15.922zM.391 3.5H0V2h.391c1.109 0 2.16.49 2.873 1.34L4.89 5.277l-.979 1.167-1.796-2.14A2.25 2.25 0 0 0 .39 3.5z", 
+    "m7.5 10.723.98-1.167.957 1.14a2.25 2.25 0 0 0 1.724.804h1.947l-1.017-1.018a.75.75 0 1 1 1.06-1.06l2.829 2.828-2.829 2.828a.75.75 0 1 1-1.06-1.06L13.109 13H11.16a3.75 3.75 0 0 1-2.873-1.34l-.787-.938z"];
+    
+    switch(iconType) {
+        case 'big':
+            iconSvgPath = ['m 11.25 16.0845 l 1.47 -1.7505 l 1.4355 1.71 a 3.375 3.375 90 0 0 2.586 1.206 h 2.9205 l -1.5255 -1.527 a 1.125 1.125 90 1 1 1.59 -1.59 l 4.2435 4.242 l -4.2435 4.242 a 1.125 1.125 90 1 1 -1.59 -1.59 L 19.6635 19.5 H 16.74 a 5.625 5.625 90 0 1 -4.3095 -2.01 l -1.1805 -1.407 z M 19.7265 1.383 a 1.125 1.125 90 1 0 -1.59 1.59 L 19.6635 4.5 H 16.74 a 5.625 5.625 90 0 0 -4.3095 2.01 l -9.2595 11.034 A 3.375 3.375 90 0 1 0.585 18.75 H 0 V 21 h 0.5865 a 5.625 5.625 90 0 0 4.3095 -2.01 l 9.2595 -11.034 a 3.375 3.375 90 0 1 2.586 -1.206 h 2.9205 l -1.5255 1.527 a 1.125 1.125 90 0 0 1.59 1.59 L 23.97 5.625 L 19.725 1.383 z M 0.5865 5.25 H 0 V 3 h 0.5865 c 1.6635 0 3.24 0.735 4.3095 2.01 L 7.335 7.9155 l -1.4685 1.7505 l -2.694 -3.21 A 3.375 3.375 90 0 0 0.585 5.25 z'];
+    }
     return (
         <IconContainer 
-            style={state ? 'fill-customGreen relative' : 'fill-neutral-400 hover:fill-white'}
+            style={(state ? ' fill-customGreen relative' : (' fill-neutral-400 hover:fill-white' + style + " cursor-pointer"))}
             onClick={onClick}
-            iconSvgPath={["M13.151.922a.75.75 0 1 0-1.06 1.06L13.109 3H11.16a3.75 3.75 0 0 0-2.873 1.34l-6.173 7.356A2.25 2.25 0 0 1 .39 12.5H0V14h.391a3.75 3.75 0 0 0 2.873-1.34l6.173-7.356a2.25 2.25 0 0 1 1.724-.804h1.947l-1.017 1.018a.75.75 0 0 0 1.06 1.06L15.98 3.75 13.15.922zM.391 3.5H0V2h.391c1.109 0 2.16.49 2.873 1.34L4.89 5.277l-.979 1.167-1.796-2.14A2.25 2.25 0 0 0 .39 3.5z", 
-                "m7.5 10.723.98-1.167.957 1.14a2.25 2.25 0 0 0 1.724.804h1.947l-1.017-1.018a.75.75 0 1 1 1.06-1.06l2.829 2.828-2.829 2.828a.75.75 0 1 1-1.06-1.06L13.109 13H11.16a3.75 3.75 0 0 1-2.873-1.34l-.787-.938z"]}
+            iconSvgPath={iconSvgPath}
+            svgDim={svgDim}
         >
             {state && <div className="w-[4px] h-[4px] absolute bottom-[-4px] bg-customGreen rounded-full"></div>}
         </IconContainer>
     );
 }
 
-export const PreviousIcon: React.FC<IconContainerProps> = ({ onClick }) => {
-    return (
-        <IconContainer
-            style="fill-neutral-400 hover:fill-white cursor-pointer" 
-            iconSvgPath={["M3.3 1a.7.7 0 0 1 .7.7v5.15l9.95-5.744a.7.7 0 0 1 1.05.606v12.575a.7.7 0 0 1-1.05.607L4 9.149V14.3a.7.7 0 0 1-.7.7H1.7a.7.7 0 0 1-.7-.7V1.7a.7.7 0 0 1 .7-.7h1.6z"]}
-            onClick={onClick}
-        />
-    );
-}
-
-export const NextIcon: React.FC<IconContainerProps> = ({ onClick }) => {
-    return (
-        <IconContainer
-            style="fill-neutral-400 hover:fill-white cursor-pointer" 
-            iconSvgPath={["M12.7 1a.7.7 0 0 0-.7.7v5.15L2.05 1.107A.7.7 0 0 0 1 1.712v12.575a.7.7 0 0 0 1.05.607L12 9.149V14.3a.7.7 0 0 0 .7.7h1.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7h-1.6z"]}
-            onClick={onClick}
-        />
-    );
-}
-
-export const RepeatIcon: React.FC<RepeatIconProps> = ({ state, onClick }) => {
+export const PreviousIcon: React.FC<IconContainerProps> = ({ onClick, style, svgDim, iconType }) => {
+    let iconSvgPath = ["M3.3 1a.7.7 0 0 1 .7.7v5.15l9.95-5.744a.7.7 0 0 1 1.05.606v12.575a.7.7 0 0 1-1.05.607L4 9.149V14.3a.7.7 0 0 1-.7.7H1.7a.7.7 0 0 1-.7-.7V1.7a.7.7 0 0 1 .7-.7h1.6z"];
     
-    let style, iconSvgPath;
+    switch(iconType) {
+        case 'big':
+            iconSvgPath = ['M 4.95 1.5 a 1.05 1.05 90 0 1 1.05 1.05 v 7.725 l 14.925 -8.616 a 1.05 1.05 90 0 1 1.575 0.909 v 18.8625 a 1.05 1.05 90 0 1 -1.575 0.9105 L 6 13.7235 V 21.45 a 1.05 1.05 90 0 1 -1.05 1.05 H 2.55 a 1.05 1.05 90 0 1 -1.05 -1.05 V 2.55 a 1.05 1.05 90 0 1 1.05 -1.05 h 2.4 z'];
+    }
+    return (
+        <IconContainer
+            style={"fill-neutral-400 hover:fill-white cursor-pointer " + style} 
+            iconSvgPath={iconSvgPath}
+            onClick={onClick}
+            svgDim={svgDim}
+        />
+    );
+}
+
+export const NextIcon: React.FC<IconContainerProps> = ({ onClick, style, iconType, svgDim }) => {
+    let iconSvgPath = ["M12.7 1a.7.7 0 0 0-.7.7v5.15L2.05 1.107A.7.7 0 0 0 1 1.712v12.575a.7.7 0 0 0 1.05.607L12 9.149V14.3a.7.7 0 0 0 .7.7h1.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7h-1.6z"];
+    
+    switch(iconType) {
+        case 'big':
+            iconSvgPath = ['M 19.05 1.5 a 1.05 1.05 90 0 0 -1.05 1.05 v 7.725 L 3.075 1.6605 A 1.05 1.05 90 0 0 1.5 2.568 v 18.8625 a 1.05 1.05 90 0 0 1.575 0.9105 L 18 13.7235 V 21.45 a 1.05 1.05 90 0 0 1.05 1.05 h 2.4 a 1.05 1.05 90 0 0 1.05 -1.05 V 2.55 a 1.05 1.05 90 0 0 -1.05 -1.05 h -2.4 z'];
+    }
+    return (
+        <IconContainer
+            style={"fill-neutral-400 hover:fill-white cursor-pointer  " + style}
+            iconSvgPath={iconSvgPath}
+            onClick={onClick}
+            svgDim={svgDim}
+        />
+    );
+}
+
+export const RepeatIcon: React.FC<RepeatIconProps> = ({ state, iconType, style, svgDim, onClick }) => {
+    
+    let finalStyle, iconSvgPath;
     switch(state) {
         case 'off':
-            style = "fill-neutral-400 hover:fill-white cursor-pointer";
+            finalStyle = "fill-neutral-400 hover:fill-white cursor-pointer";
             iconSvgPath = ["M0 4.75A3.75 3.75 0 0 1 3.75 1h8.5A3.75 3.75 0 0 1 16 4.75v5a3.75 3.75 0 0 1-3.75 3.75H9.81l1.018 1.018a.75.75 0 1 1-1.06 1.06L6.939 12.75l2.829-2.828a.75.75 0 1 1 1.06 1.06L9.811 12h2.439a2.25 2.25 0 0 0 2.25-2.25v-5a2.25 2.25 0 0 0-2.25-2.25h-8.5A2.25 2.25 0 0 0 1.5 4.75v5A2.25 2.25 0 0 0 3.75 12H5v1.5H3.75A3.75 3.75 0 0 1 0 9.75v-5z"];
+            if(iconType === 'big') {
+                finalStyle += style;
+                iconSvgPath = ["M 0 7.125 A 5.625 5.625 90 0 1 5.625 1.5 h 12.75 A 5.625 5.625 90 0 1 24 7.125 v 7.5 a 5.625 5.625 90 0 1 -5.625 5.625 H 14.715 l 1.527 1.527 a 1.125 1.125 90 1 1 -1.59 1.59 L 10.4085 19.125 l 4.2435 -4.242 a 1.125 1.125 90 1 1 1.59 1.59 L 14.7165 18 h 3.6585 a 3.375 3.375 90 0 0 3.375 -3.375 v -7.5 a 3.375 3.375 90 0 0 -3.375 -3.375 h -12.75 A 3.375 3.375 90 0 0 2.25 7.125 v 7.5 A 3.375 3.375 90 0 0 5.625 18 H 7.5 v 2.25 H 5.625 A 5.625 5.625 90 0 1 0 14.625 v -7.5 z"];
+            }
             break;
         
         case 'all':
-            style = "fill-customGreen cursor-pointer relative";
+            finalStyle = "fill-customGreen cursor-pointer relative";
             iconSvgPath = ["M0 4.75A3.75 3.75 0 0 1 3.75 1h8.5A3.75 3.75 0 0 1 16 4.75v5a3.75 3.75 0 0 1-3.75 3.75H9.81l1.018 1.018a.75.75 0 1 1-1.06 1.06L6.939 12.75l2.829-2.828a.75.75 0 1 1 1.06 1.06L9.811 12h2.439a2.25 2.25 0 0 0 2.25-2.25v-5a2.25 2.25 0 0 0-2.25-2.25h-8.5A2.25 2.25 0 0 0 1.5 4.75v5A2.25 2.25 0 0 0 3.75 12H5v1.5H3.75A3.75 3.75 0 0 1 0 9.75v-5z"];
+            if(iconType === 'big') {
+                iconSvgPath = ["M 0 7.125 A 5.625 5.625 90 0 1 5.625 1.5 h 12.75 A 5.625 5.625 90 0 1 24 7.125 v 7.5 a 5.625 5.625 90 0 1 -5.625 5.625 H 14.715 l 1.527 1.527 a 1.125 1.125 90 1 1 -1.59 1.59 L 10.4085 19.125 l 4.2435 -4.242 a 1.125 1.125 90 1 1 1.59 1.59 L 14.7165 18 h 3.6585 a 3.375 3.375 90 0 0 3.375 -3.375 v -7.5 a 3.375 3.375 90 0 0 -3.375 -3.375 h -12.75 A 3.375 3.375 90 0 0 2.25 7.125 v 7.5 A 3.375 3.375 90 0 0 5.625 18 H 7.5 v 2.25 H 5.625 A 5.625 5.625 90 0 1 0 14.625 v -7.5 z"];
+            }
             break;
 
         case 'one':
-            style = "fill-customGreen cursor-pointer relative";
+            finalStyle = "fill-customGreen cursor-pointer relative";
             iconSvgPath = ["M0 4.75A3.75 3.75 0 0 1 3.75 1h.75v1.5h-.75A2.25 2.25 0 0 0 1.5 4.75v5A2.25 2.25 0 0 0 3.75 12H5v1.5H3.75A3.75 3.75 0 0 1 0 9.75v-5zM12.25 2.5h-.75V1h.75A3.75 3.75 0 0 1 16 4.75v5a3.75 3.75 0 0 1-3.75 3.75H9.81l1.018 1.018a.75.75 0 1 1-1.06 1.06L6.939 12.75l2.829-2.828a.75.75 0 1 1 1.06 1.06L9.811 12h2.439a2.25 2.25 0 0 0 2.25-2.25v-5a2.25 2.25 0 0 0-2.25-2.25z", "M9.12 8V1H7.787c-.128.72-.76 1.293-1.787 1.313V3.36h1.57V8h1.55z"];
+            if(iconType === 'big') {
+                iconSvgPath = ["M 0 7.125 A 5.625 5.625 90 0 1 5.625 1.5 h 1.125 v 2.25 h -1.125 A 3.375 3.375 90 0 0 2.25 7.125 v 7.5 A 3.375 3.375 90 0 0 5.625 18 H 7.5 v 2.25 H 5.625 A 5.625 5.625 90 0 1 0 14.625 v -7.5 z M 18.375 3.75 h -1.125 V 1.5 h 1.125 A 5.625 5.625 90 0 1 24 7.125 v 7.5 a 5.625 5.625 90 0 1 -5.625 5.625 H 14.715 l 1.527 1.527 a 1.125 1.125 90 1 1 -1.59 1.59 L 10.4085 19.125 l 4.2435 -4.242 a 1.125 1.125 90 1 1 1.59 1.59 L 14.7165 18 h 3.6585 a 3.375 3.375 90 0 0 3.375 -3.375 v -7.5 a 3.375 3.375 90 0 0 -3.375 -3.375 z M 13.68 12 V 1.5 H 11.6805 c -0.192 1.08 -1.14 1.9395 -2.6805 1.9695 V 5.04 h 2.355 V 12 h 2.325 z"];
+            }
             break;
     }
-
     return (
         <IconContainer
-            style={style}
+            style={finalStyle}
             iconSvgPath={iconSvgPath}
             onClick={onClick}
+            svgDim={svgDim}
         >
-             {state!=='off' && <div className="w-[4px] h-[4px] absolute bottom-[-4px] bg-customGreen rounded-full"></div>}
+             { state !== 'off' && <div className="w-[4px] h-[4px] absolute bottom-[-4px] bg-customGreen rounded-full"></div> }
         </IconContainer>
     );
 }

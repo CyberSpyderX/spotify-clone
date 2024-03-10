@@ -11,9 +11,10 @@ import { useRouter } from "next/navigation";
 
 interface LikeButtonProps {
     songId: string;
+    size?: number;
 }
 
-const LikeButton: React.FC<LikeButtonProps> = ({ songId }) => {
+const LikeButton: React.FC<LikeButtonProps> = ({ songId, size = 25 }) => {
     const [isLiked, setIsLiked] = useState<boolean>(false);
     const router = useRouter();
     const { supabaseClient }  = useSessionContext();
@@ -42,7 +43,8 @@ const LikeButton: React.FC<LikeButtonProps> = ({ songId }) => {
 
     const Icon = isLiked ? AiFillHeart: AiOutlineHeart;
 
-    const handleLike = async () => {
+    const handleLike = async (event: any) => {
+        event.stopPropagation();
         if(!user) {
             return authModal.onOpen();
         }
@@ -79,12 +81,12 @@ const LikeButton: React.FC<LikeButtonProps> = ({ songId }) => {
 
     return (
         <button 
-        onClick={handleLike}
-        className="
-            hover:opacity-75
-            transition
+            onClick={(event) => handleLike(event)}
+            className="
+                hover:opacity-75
+                transition
         ">
-            <Icon color={isLiked ? '#22c55e' : 'white'} size={25}/>
+            <Icon color={isLiked ? '#22c55e' : 'white'} size={size}/>
         </button>
     );
 }

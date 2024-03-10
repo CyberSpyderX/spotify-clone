@@ -56,7 +56,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ elapsedTime, duration = 0, ha
                         absolute
                     ">
                     </Slider.Range>
-                    <Slider.Thumb className="h-[10px] w-[10px] rounded-full hidden group-hover:block group-hover:bg-white" aria-label="Seek" />
+                    <Slider.Thumb className="h-[10px] w-[10px] rounded-full bg-red-500 group-hover:block group-hover:bg-white" aria-label="Seek" />
                 </Slider.Track>
             </Slider.Root>
             <div className="text-[12px] text-neutral-400 font-semibold">

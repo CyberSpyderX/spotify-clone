@@ -145,7 +145,6 @@ const DesktopPlayer: React.FC<PlayerProps> = ({
                     <div className="
                         flex
                         h-auto
-                        gap-x-2
                     ">
                         <ProgressBar 
                             elapsedTime={songElapsedTime} 

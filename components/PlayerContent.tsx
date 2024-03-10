@@ -69,7 +69,10 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
             }, onplayerror: (id, error) => {
                 console.log('Song Error occured...', error);
             }, onend: () => {
-                onPlayNext();
+                if(isActiveDevice) {
+                    onPlayNext();
+                }
+                // TODO: Revert
             }
         });
         console.log('Creating PlayerContent...', isActiveDevice);
@@ -322,7 +325,7 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
                     handleVolumeChange={handleVolumeChange}
                     setShowConnectDevices={setShowConnectDevices}
                     toggleMute={toggleMute} />
-                    
+
                     <MobilePlayer isLoading={isLoading} 
                         songData={songData} 
                         handlePlayback={handlePlayback}
@@ -341,11 +344,6 @@ const PlayerContent:React.FC<PlayerContentProps> = ({ key, songData, songUrl, ch
                         handleVolumeChange={handleVolumeChange}
                         setShowConnectDevices={setShowConnectDevices}
                         toggleMute={toggleMute} />
-                    
-                    <div className="h-full w-full bg-white">
-
-                    </div>
-
                 </div>
                 : null
             }        

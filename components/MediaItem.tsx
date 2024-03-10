@@ -3,13 +3,15 @@
 import useLoadImage from "@/hooks/useLoadImage";
 import { Song } from "@/types";
 import Image from "next/image";
+import { twMerge } from "tailwind-merge";
 
 interface MediaItemProps {
     song: Song;
     onClick?: (id: string) => void;
+    inactive?: boolean;
 }
 
-const MediaItem: React.FC<MediaItemProps> = ({ song, onClick }) => {
+const MediaItem: React.FC<MediaItemProps> = ({ song, onClick, inactive }) => {
     const imageUrl = useLoadImage(song);
 
     const handleClick = () => {
@@ -20,17 +22,17 @@ const MediaItem: React.FC<MediaItemProps> = ({ song, onClick }) => {
 
     return (
         <div 
-        onClick={handleClick}
-        className="
-            flex
-            items-center
-            gap-x-3
-            p-2
-            hover:bg-neutral-800/50
-            rounded-md
-            cursor-pointer
-            truncate
-        ">
+            onClick={handleClick}
+            className={twMerge(` 
+                flex
+                items-center
+                gap-x-3
+                p-2
+                
+                rounded-md
+                cursor-pointer
+                truncate
+        `, inactive ? "": 'hover:bg-neutral-800/50')}>
         <div className="
             relative
             rounded-md
