@@ -6,7 +6,7 @@ td
 _td_files
 _td_database
 
-/api/
+/api
 
 # dependencies
 /node_modules
